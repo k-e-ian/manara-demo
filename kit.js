@@ -11,16 +11,21 @@ window.Kit = (() => {
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   };
 
+  // The basket is always read fresh from storage, so another page or tab can't leave it stale.
   function basket(key) {
-    let c = store.get(key, {});
+    let c = {};
+    const load = () => (c = store.get(key, {}));
     const save = () => store.set(key, c);
     return {
-      get: () => c,
-      qty: id => c[id] || 0,
-      add(id, q = 1) { c[id] = (c[id] || 0) + q; if (c[id] <= 0) delete c[id]; save(); },
+      get: load,
+      qty: id => load()[id] || 0,
+      add(id, q = 1) { load(); c[id] = (c[id] || 0) + q; if (c[id] <= 0) delete c[id]; save(); },
       clear() { c = {}; try { localStorage.removeItem(key); } catch {} },
     };
   }
+  // Coming back with the browser's Back button restores the page as it was (with an old basket);
+  // reload it instead so totals always match what is really in the basket.
+  addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
 
   let menuCache;
   async function menu() {
