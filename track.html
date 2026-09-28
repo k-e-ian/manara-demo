@@ -5,12 +5,12 @@
 <title>Your Order | Manara Restaurant</title><meta name="robots" content="noindex"><meta name="theme-color" content="#5a3a2a">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cookie&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="lantern.css">
+<link rel="stylesheet" href="lantern.css?v=2">
 <style>
   main { max-width: 620px; margin: 0 auto; padding: 32px 20px 64px; text-align: center; }
   /* one brass lantern per step; each lights as the order reaches it */
   .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 36px 0 8px; }
-  .row div { display: grid; justify-items: center; gap: 10px; font-size: .8125rem; font-weight: 700; color: var(--muted); }
+  .row div { display: grid; justify-items: center; gap: 10px; font-size:.875rem; font-weight: 700; color: var(--muted); }
   .row .lantern { width: 30px; height: 75px; opacity: .45; transition: opacity .6s, filter .6s; }
   .row .on { color: var(--choc); }
   .row .on .lantern { opacity: 1; --win: var(--glow); filter: drop-shadow(0 0 10px hsla(42, 100%, 60%, .95)); }
@@ -26,7 +26,7 @@
 <header class="top"><div class="wrap"><a class="brand" href="index.html"><svg class="lantern lit" aria-hidden="true"><use href="#lamp"/></svg><span><b>Manara</b><small>Restaurant</small></span></a><a class="phone" href="tel:+254798122122" style="margin-left:auto">0798 122 122</a></div></header>
 <main aria-live="polite">
   <p style="margin:0;color:var(--muted)">Order <b id="no" style="color:var(--choc)">…</b></p>
-  <h1 class="caps" id="title" style="font-size:1.75rem;margin-top:6px">One moment</h1>
+  <h1 class="caps" id="title" style="font-size:1.875rem;margin-top:6px">One moment</h1>
   <p id="text"></p>
   <div id="act"></div>
   <div class="row" id="row"></div>
