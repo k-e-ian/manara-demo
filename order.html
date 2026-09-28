@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Order | Manara Restaurant</title><meta name="robots" content="noindex"><meta name="theme-color" content="#5a3a2a">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cookie&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lantern.css">
+<style>
+  main { max-width: 620px; margin: 0 auto; padding: 32px 20px 64px; }
+  .box { background: var(--card); border-radius: var(--r); padding: 8px 20px 16px; }
+  .ln { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px dashed hsl(30 25% 72%); font-size: .9375rem; }
+  .q button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--choc); background: transparent; cursor: pointer; font-weight: 800; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 24px 0 16px; }
+  .seg button { padding: 14px; border: 2px solid var(--parch-deep); border-radius: var(--r); background: var(--card); cursor: pointer; font-weight: 700; text-align: left; }
+  .seg button small { display: block; font-weight: 500; color: var(--muted); font-size: .75rem; }
+  .seg button[aria-pressed="true"] { border-color: var(--choc); box-shadow: inset 0 0 0 1px var(--choc); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="lamp" viewBox="0 0 40 100"><g fill="currentColor"><rect x="19.3" y="0" width="1.4" height="9"/><circle cx="20" cy="10" r="2.3"/><path d="M11 22 Q20 7 29 22 Z"/><rect x="8" y="22" width="24" height="5" rx="1.5"/><rect x="9" y="27" width="22" height="40" rx="1.5"/><rect x="8" y="67" width="24" height="5" rx="1.5"/><path d="M10 72 H30 L24 86 H16 Z"/><path d="M17 86 H23 L20 99 Z"/></g><rect x="12.5" y="30.5" width="15" height="33" rx="1" fill="var(--win)"/><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="15" y="36" width="10" height="10"/><rect x="15" y="36" width="10" height="10" transform="rotate(45 20 41)"/><path d="M12.5 53 H27.5 M16.5 53 V63.5 M23.5 53 V63.5"/></g></symbol></svg>
+<div class="concept">Concept preview by WolfXTech. Payments are simulated until M-Pesa is connected. Delivery fee is a sample.</div>
+<header class="top"><div class="wrap"><a class="brand" href="index.html"><svg class="lantern lit" aria-hidden="true"><use href="#lamp"/></svg><span><b>Manara</b><small>Restaurant</small></span></a><a class="phone" href="tel:+254798122122" style="margin-left:auto">0798 122 122</a></div></header>
+<main>
+  <span class="script">Your order</span>
+  <h1 class="caps" style="font-size:1.75rem;margin:4px 0 16px">Review &amp; pay</h1>
+  <div class="box" id="lines"></div>
+  <form id="f" novalidate>
+    <div class="seg" role="group" aria-label="Delivery or pickup">
+      <button type="button" data-way="delivery" aria-pressed="true">Deliver to me<small>home or office</small></button>
+      <button type="button" data-way="pickup" aria-pressed="false">I'll pick it up<small>Westfield Mall, ground floor</small></button>
+    </div>
+    <label class="field">Name<input name="name" autocomplete="name"></label>
+    <label class="field">M-Pesa number<input name="phone" inputmode="tel" autocomplete="tel" placeholder="0712 345 678"></label>
+    <label class="field" id="addr">Delivery address<textarea name="address" rows="2" placeholder="Office or estate, building, floor, road"></textarea></label>
+    <label class="field">Notes for the kitchen<input name="notes" placeholder="Side with grills: masala chips · curry with naan"></label>
+    <p class="err" id="err" hidden></p>
+    <button class="btn btn-orange" id="pay" type="submit" style="width:100%" disabled>Pay with M-Pesa</button>
+    <p style="font-size:.75rem;color:var(--muted);margin:10px 0 0">Curries are freshly cooked to order and take 15–20 minutes.</p>
+  </form>
+</main>
+<script src="kit.js"></script>
+<script>
+  const b = Kit.basket('mn-order'); let data, way = 'delivery';
+  function render() {
+    const t = Kit.totals(b, data.items, way, data.delivery_fee);
+    document.getElementById('lines').innerHTML = t.lines.length ? t.lines.map(l => `<div class="ln"><b>${Kit.esc(l.name)}</b><span class="q"><button type="button" data-q="${Kit.esc(l.id)}" data-d="-1" aria-label="One less">−</button> ${l.qty} <button type="button" data-q="${Kit.esc(l.id)}" data-d="1" aria-label="One more">+</button></span><span>${Kit.fmt(l.line)}</span></div>`).join('')
+      + (t.delivery ? `<p style="text-align:right;margin:12px 0 0;color:var(--muted)">Delivery ${Kit.fmt(t.delivery)}</p>` : '') + `<p style="text-align:right;font-weight:800;font-size:1.5rem;margin:6px 0 0">KES ${Kit.fmt(t.total)}</p>`
+      : '<p>Nothing here yet. <a href="index.html#menu">See the menu</a>.</p>';
+    const btn = document.getElementById('pay'); btn.disabled = !t.lines.length; btn.textContent = t.lines.length ? `Pay KES ${Kit.fmt(t.total)} with M-Pesa` : 'Pay with M-Pesa';
+  }
+  document.addEventListener('click', e => {
+    const q = e.target.closest('[data-q]'); if (q) { b.add(q.dataset.q, +q.dataset.d); render(); }
+    const w = e.target.closest('[data-way]'); if (w) { way = w.dataset.way; document.querySelectorAll('[data-way]').forEach(x => x.setAttribute('aria-pressed', x === w)); document.getElementById('addr').hidden = way !== 'delivery'; render(); }
+  });
+  document.getElementById('f').addEventListener('submit', async e => {
+    e.preventDefault(); const f = new FormData(e.target), err = document.getElementById('err'), btn = document.getElementById('pay');
+    err.hidden = true; btn.disabled = true; btn.textContent = 'Sending the M-Pesa prompt…';
+    try { const o = await Kit.placeOrder(b, { name: f.get('name'), phone: f.get('phone'), fulfilment: way, address: f.get('address'), notes: f.get('notes') }); location.href = 'track.html?id=' + encodeURIComponent(o.id); }
+    catch (ex) { err.textContent = ex.message; err.hidden = false; render(); }
+  });
+  Kit.menu().then(d => { data = d; render(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Order | Manara Restaurant</title><meta name="robots" content="noindex"><meta name="theme-color" content="#5a3a2a">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cookie&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lantern.css">
+<style>
+  main { max-width: 620px; margin: 0 auto; padding: 32px 20px 64px; text-align: center; }
+  /* one brass lantern per step; each lights as the order reaches it */
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 36px 0 8px; }
+  .row div { display: grid; justify-items: center; gap: 10px; font-size: .8125rem; font-weight: 700; color: var(--muted); }
+  .row .lantern { width: 30px; height: 75px; opacity: .45; transition: opacity .6s, filter .6s; }
+  .row .on { color: var(--choc); }
+  .row .on .lantern { opacity: 1; --win: var(--glow); filter: drop-shadow(0 0 10px hsla(42, 100%, 60%, .95)); }
+  .row .now .lantern { animation: flick 2.4s ease-in-out infinite; }
+  @keyframes flick { 50% { filter: drop-shadow(0 0 4px hsla(42, 100%, 60%, .6)); } }
+  .rc { background: var(--card); border-radius: var(--r); padding: 20px; margin-top: 32px; text-align: left; }
+  .rc div { display: flex; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="lamp" viewBox="0 0 40 100"><g fill="currentColor"><rect x="19.3" y="0" width="1.4" height="9"/><circle cx="20" cy="10" r="2.3"/><path d="M11 22 Q20 7 29 22 Z"/><rect x="8" y="22" width="24" height="5" rx="1.5"/><rect x="9" y="27" width="22" height="40" rx="1.5"/><rect x="8" y="67" width="24" height="5" rx="1.5"/><path d="M10 72 H30 L24 86 H16 Z"/><path d="M17 86 H23 L20 99 Z"/></g><rect x="12.5" y="30.5" width="15" height="33" rx="1" fill="var(--win)"/><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="15" y="36" width="10" height="10"/><rect x="15" y="36" width="10" height="10" transform="rotate(45 20 41)"/><path d="M12.5 53 H27.5 M16.5 53 V63.5 M23.5 53 V63.5"/></g></symbol></svg>
+<div class="concept">Concept preview by WolfXTech. Payments are simulated until M-Pesa is connected.</div>
+<header class="top"><div class="wrap"><a class="brand" href="index.html"><svg class="lantern lit" aria-hidden="true"><use href="#lamp"/></svg><span><b>Manara</b><small>Restaurant</small></span></a><a class="phone" href="tel:+254798122122" style="margin-left:auto">0798 122 122</a></div></header>
+<main aria-live="polite">
+  <p style="margin:0;color:var(--muted)">Order <b id="no" style="color:var(--choc)">…</b></p>
+  <h1 class="caps" id="title" style="font-size:1.75rem;margin-top:6px">One moment</h1>
+  <p id="text"></p>
+  <div id="act"></div>
+  <div class="row" id="row"></div>
+  <div class="rc" id="rc"></div>
+</main>
+<script src="kit.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get('id') || '';
+  const COPY = {
+    awaiting_payment: ['Check your phone', o => `Enter your M-Pesa PIN to pay KES ${Kit.fmt(o.total)}.`],
+    payment_failed: ["Payment didn't go through", o => Kit.esc(o.payment_error || 'The prompt was cancelled or timed out.')],
+    paid: ['Shukran, you have paid', () => 'Your order is with the kitchen.'],
+    preparing: ['In the kitchen', () => 'Freshly cooked for you. Curries take 15–20 minutes.'],
+    ready: ['Ready', o => o.fulfilment === 'pickup' ? 'Collect at Manara, ground floor, Westfield Mall.' : 'Packed and waiting for the rider.'],
+    out_for_delivery: ['On the way', () => 'Your rider has left Westfield Mall.'],
+    completed: ['Bil hana wa shifa', () => 'Enjoy your meal. Thank you for choosing Manara.'],
+    cancelled: ['Cancelled', () => 'Call 0798 122 122 and we will sort it out.'],
+  };
+  const t = Kit.track(id, o => {
+    const [title, text] = COPY[o.status];
+    document.getElementById('no').textContent = o.id;
+    document.getElementById('title').textContent = title;
+    document.getElementById('text').innerHTML = text(o);
+    const s = o.fulfilment === 'pickup' ? [['paid', 'Paid'], ['preparing', 'Cooking'], ['ready', 'Ready'], ['completed', 'Collected']] : [['paid', 'Paid'], ['preparing', 'Cooking'], ['out_for_delivery', 'On the way'], ['completed', 'Delivered']];
+    const done = s.filter(([k]) => o.reached[k]).length;
+    document.getElementById('row').hidden = !o.active;
+    document.getElementById('row').innerHTML = s.map(([k, n], i) => `<div class="${o.reached[k] ? 'on' : ''} ${i === done - 1 && o.status !== 'completed' ? 'now' : ''}"><svg class="lantern" aria-hidden="true"><use href="#lamp"/></svg>${n}</div>`).join('');
+    document.getElementById('act').innerHTML = o.status === 'payment_failed' ? '<button class="btn btn-orange" id="retry">Send the prompt again</button>' : '';
+    const r = document.getElementById('retry'); if (r) r.onclick = () => { r.disabled = true; t.retry(); };
+    document.getElementById('rc').innerHTML = o.items.map(i => `<div><span>${i.qty} × ${Kit.esc(i.name)}</span><span>${Kit.fmt(i.price * i.qty)}</span></div>`).join('')
+      + (o.delivery_fee ? `<div><span>Delivery</span><span>${Kit.fmt(o.delivery_fee)}</span></div>` : '')
+      + `<div style="font-weight:800;margin-top:8px"><span>Total</span><span>KES ${Kit.fmt(o.total)}</span></div>`;
+  }, () => { document.getElementById('title').textContent = 'Order not found'; });
+</script>
+</body>
+</html>
